@@ -4,9 +4,7 @@ const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ success: false, message: "No token provided" });
+    return res.status(401).json({ success: false, message: "No token provided" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -20,4 +18,13 @@ const authenticate = (req, res, next) => {
   }
 };
 
-module.exports = { authenticate };
+const authorize =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+    next();
+  };
+
+module.exports = { authenticate, authorize };
