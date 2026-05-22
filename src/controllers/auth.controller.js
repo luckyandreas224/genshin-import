@@ -11,7 +11,6 @@ const register = async (req, res) => {
 
   try {
     const [existing] = await db.query("SELECT id FROM users WHERE email = ? OR username = ?", [email, username]);
-
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: "Email or username already taken" });
     }
@@ -42,9 +41,14 @@ const login = async (req, res) => {
 
   try {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-    const user = rows[0];
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const user = rows[0];
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
@@ -61,7 +65,4 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = {
-  register,
-  login,
-};
+module.exports = { register, login };
