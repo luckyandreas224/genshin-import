@@ -17,12 +17,11 @@ const authenticate = (req, res, next) => {
   }
 };
 
-// prettier-ignore
 const authorize = (...roles) => (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
-    }
-    next();
-  };
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: "Not authorized" });
+  }
+  next();
+};
 
 module.exports = { authenticate, authorize };
