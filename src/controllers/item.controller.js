@@ -191,10 +191,44 @@ const updateItem = async (req, res) => {
   }
 };
 
+const deleteItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    const [existing] = await db.query("SELECT * FROM items WHERE id = ?", [
+      itemId,
+    ]);
+    if (existing.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
+
+    await db.query("DELETE FROM items WHERE id = ?", [itemId]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...existing[0],
+        type: existing[0].type.toUpperCase(),
+      },
+      message: "Item deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 module.exports = {
   getAllItems,
   getItemById,
   createItem,
   updateItem,
+  deleteItem,
 };
