@@ -108,8 +108,6 @@ const createItem = async (req, res) => {
   }
 };
 
-
-
 const updateItem = async (req, res) => {
   try {
     const { itemId } = req.params;
@@ -223,6 +221,95 @@ const deleteItem = async (req, res) => {
   }
 };
 
+const buyItem = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const { itemId } = req.params;
+    const userId = req.user.id;
+    const quantity = parseInt(req.body.quantity) || 1;
+
+    if (quantity <= 0) {
+      await connection.rollback();
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: "Field 'quantity' must be >= 1",
+      });
+    }
+
+    const [items] = await connection.query(
+      "SELECT * FROM items WHERE id = ? FOR UPDATE",
+      [itemId]
+    );
+
+    if (items.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return res.status(404).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
+
+    const item = items[0];
+
+    if (item.stock < quantity) {
+      await connection.rollback();
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient stock. Available: ${item.stock}, requested: ${quantity}`,
+      });
+    }
+
+    await connection.query(
+      "UPDATE items SET stock = stock - ? WHERE id = ?",
+      [quantity, itemId]
+    );
+
+    await connection.query(
+      `INSERT INTO user_items (user_id, item_id, quantity)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`,
+      [userId, itemId, quantity]
+    );
+
+    await connection.commit();
+    connection.release();
+
+    const [updatedItem] = await db.query(
+      "SELECT id, name, type, stock, price FROM items WHERE id = ?",
+      [itemId]
+    );
+
+    const [userItem] = await db.query(
+      "SELECT quantity FROM user_items WHERE user_id = ? AND item_id = ?",
+      [userId, itemId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        item: {
+          ...updatedItem[0],
+          type: updatedItem[0].type.toUpperCase(),
+        },
+        purchased_quantity: quantity,
+        total_owned: userItem[0].quantity,
+      },
+    });
+  } catch (error) {
+    await connection.rollback();
+    connection.release();
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 
 module.exports = {
@@ -231,4 +318,5 @@ module.exports = {
   createItem,
   updateItem,
   deleteItem,
+  buyItem
 };
