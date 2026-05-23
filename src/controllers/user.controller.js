@@ -4,7 +4,7 @@ const getMe = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const [rows] = await db.query("SELECT id, username, email FROM users WHERE id = ?", [userId]);
+    const [rows] = await db.query("SELECT id, username, email, currency FROM users WHERE id = ?", [userId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -31,6 +31,7 @@ const getMe = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      message: "User retrieved successfully",
       data: {
         ...rows[0],
         totalWeapons: parseInt(loadout[0].total_weapons) || 0,

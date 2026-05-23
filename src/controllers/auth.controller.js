@@ -9,6 +9,18 @@ const register = async (req, res) => {
     return res.status(400).json({ success: false, message: "Username, email, and password required" });
   }
 
+  if (username.length < 1) {
+    return res.status(400).json({ success: false, message: "Username must be at least 1 character" });
+  }
+
+  if (!email.includes("@")) {
+    return res.status(400).json({ success: false, message: "Invalid email format" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+  }
+
   try {
     const [existing] = await db.query("SELECT id FROM users WHERE email = ? OR username = ?", [email, username]);
     if (existing.length > 0) {
@@ -24,7 +36,7 @@ const register = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "User registered",
+      message: "User registered successfully",
       data: { id: result.insertId, username, email, role: "USER" },
     });
   } catch (err) {
@@ -37,6 +49,14 @@ const login = async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ success: false, message: "Email and password required" });
+  }
+
+  if (!email.includes("@")) {
+    return res.status(400).json({ success: false, message: "Invalid email format" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
   }
 
   try {
@@ -59,7 +79,11 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    return res.status(200).json({ success: true, data: { token } });
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      data: { token },
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Internal server error" });
   }

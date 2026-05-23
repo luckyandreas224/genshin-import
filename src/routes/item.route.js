@@ -1,12 +1,12 @@
 const { Router } = require("express");
 const { authenticate, authorize } = require("../middlewares/auth.middleware");
 const {
+  buyItem,
+  createItem,
+  deleteItem,
   getAllItems,
   getItemById,
-  createItem,
   updateItem,
-  deleteItem,
-  buyItem,
 } = require("../controllers/item.controller");
 
 const router = Router();
