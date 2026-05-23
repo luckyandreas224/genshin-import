@@ -6,8 +6,8 @@ const router = Router();
 
 router.get("/", getAllItems);
 router.get("/:itemId", getItemById);
-router.post("/", authenticate, authorize(["ADMIN"]), createItem);
-router.put("/:itemId", authenticate, authorize(["ADMIN"]), updateItem);
-router.delete("/:itemId", authenticate, authorize(["ADMIN"]), deleteItem);
-router.post("/:itemId/buy", authenticate, authorize(["USER"]), buyItem);
+router.post("/", authenticate, authorize("admin"), createItem);
+router.put("/:itemId", authenticate, authorize("admin"), updateItem);
+router.delete("/:itemId", authenticate, authorize("admin"), deleteItem);
+router.post("/:itemId/buy", authenticate, authorize("user"), buyItem);
 module.exports = router;
