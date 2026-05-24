@@ -201,8 +201,8 @@ const buyItem = async (req, res) => {
 
     await connection.commit();
 
-    const [updatedItem] = await db.query("SELECT id, name, type, stock, price FROM items WHERE id = ?", [itemId]);
-    const [userItem] = await db.query("SELECT quantity FROM user_items WHERE user_id = ? AND item_id = ?", [
+    const [updatedItem] = await connection.query("SELECT id, name, type, stock, price FROM items WHERE id = ?", [itemId]);
+    const [userItem] = await connection.query("SELECT quantity FROM user_items WHERE user_id = ? AND item_id = ?", [
       userId,
       itemId,
     ]);
