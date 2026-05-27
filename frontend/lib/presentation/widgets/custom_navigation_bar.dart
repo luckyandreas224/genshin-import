@@ -13,13 +13,9 @@ class CustomNavigationBar extends StatelessWidget {
     required this.onTap,
   });
 
-  static const _icons = [
-    'assets/icons/market.svg',
-    'assets/icons/loadout.svg',
-    'assets/icons/profile.svg',
-  ];
+  static const _icons = ['assets/icons/market.svg', 'assets/icons/profile.svg'];
 
-  static const _labels = ['Market', 'Loadout', 'Profile'];
+  static const _labels = ['Market', 'Profile'];
 
   @override
   Widget build(BuildContext context) {
@@ -53,22 +49,45 @@ class CustomNavigationBar extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        height:
+            70,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
-            SvgPicture.asset(
-              _icons[index],
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  _icons[index],
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _labels[index],
+                  style: isSelected
+                      ? AppTextStyles.navLabel
+                      : AppTextStyles.navLabelInactive,
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              _labels[index],
-              style: isSelected
-                  ? AppTextStyles.navLabel
-                  : AppTextStyles.navLabelInactive,
-            ),
+            if (isSelected)
+              Positioned(
+                top:
+                    -2,
+                child: Container(
+                  height: 4,
+                  width: 48, // Lebar tompel
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryDark,
+                    borderRadius: BorderRadius.circular(
+                      4,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

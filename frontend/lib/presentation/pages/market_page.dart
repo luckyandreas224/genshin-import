@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../widgets/primogem_chip.dart';
 import '../widgets/custom_search_bar.dart';
+import '../widgets/item_card.dart';
 
 class MarketPage extends StatefulWidget {
   const MarketPage({super.key});
@@ -16,6 +19,8 @@ class _MarketPageState extends State<MarketPage> {
   final _searchCtrl = TextEditingController();
   List<dynamic> _items = []; // TODO
   bool _isLoading = false;
+
+  final String baseUrl = ''; // cmd ipconfig -> IPv4 Address
 
   @override
   void initState() {
@@ -32,7 +37,25 @@ class _MarketPageState extends State<MarketPage> {
   Future<void> _fetchItems() async {
     setState(() => _isLoading = true);
     // TODO
-    setState(() => _isLoading = false);
+    try {
+      final url = Uri.parse('$baseUrl/api/items');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final decodedBody = jsonDecode(response.body);
+        final List<dynamic> fetchedData = decodedBody['data'] ?? decodedBody;
+        setState(() {
+          _items = fetchedData;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        debugPrint('Failed to fetch items. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Network error: $e');
+    }
   }
 
   @override
@@ -63,37 +86,42 @@ class _MarketPageState extends State<MarketPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Traveler's Market", style: AppTextStyles.heading),
-            const SizedBox(height: 4),
-            RichText(
-              text: TextSpan(
-                text: 'Ready to buy some stuff, ',
-                style: AppTextStyles.subtitle.copyWith(
-                  color: AppColors.textSecondary,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Traveler's Market", style: AppTextStyles.heading),
+              const SizedBox(height: 4),
+              RichText(
+                text: TextSpan(
+                  text: 'Ready to buy some stuff, ',
+                  style: AppTextStyles.subtitle.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Traveler',
+                      style: GoogleFonts.ebGaramond(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '?',
+                      style: AppTextStyles.subtitle.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                children: [
-                  TextSpan(
-                    text: 'Traveler',
-                    style: GoogleFonts.ebGaramond(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '?',
-                    style: AppTextStyles.subtitle.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+
+        const SizedBox(width: 16),
+
         const PrimogemChip(balance: 6767), // TODO
       ],
     );
@@ -118,10 +146,34 @@ class _MarketPageState extends State<MarketPage> {
     }
 
     // TODO
-    return ListView.builder(
+    return GridView.builder(
+      padding: const EdgeInsets.only(top: 8, bottom: 24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.53,
+      ),
       itemCount: _items.length,
       itemBuilder: (context, index) {
-        return const SizedBox(); // TODO
+        final item = _items[index];
+
+        final String imagePath = item['image'] ?? '';
+        final String fullImageUrl = baseUrl + imagePath;
+
+        final String rawPrice = item['price']?.toString() ?? '0';
+        final int displayPrice = double.tryParse(rawPrice)?.toInt() ?? 0;
+
+        return ItemCard(
+          imageUrl: fullImageUrl,
+          title: item['name'] ?? 'Unknown Item',
+          price: displayPrice,
+          stock: item['stock'] ?? 0,
+          onTap: () {
+            // TODO
+            debugPrint('Ditekan: ${item['name']}');
+          },
+        );
       },
     );
   }
