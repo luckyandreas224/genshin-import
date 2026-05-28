@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../widgets/custom_text_field.dart';
@@ -18,6 +21,9 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  bool _isLoading = false;
+
+  final String baseUrl = ''; // cmd ipconfig -> IPv4 Address -> http://ip:port
 
   @override
   void dispose() {
@@ -26,9 +32,46 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      // TODO
+  Future<void> _submit() async { 
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/login');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailCtrl.text.trim(),
+          'password': _passwordCtrl.text,
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = body['data']['token'] as String;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+      } else {
+        final message = body['message'] ?? 'Login failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -82,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                         validator: Validators.password,
                       ),
                       const SizedBox(height: 24),
-                      CustomButton(label: 'Sign In', onPressed: _submit),
+                      CustomButton(label: 'Sign In', onPressed: _isLoading ? null : _submit),
                       const SizedBox(height: 16),
                       Center(
                         child: GestureDetector(
