@@ -239,6 +239,10 @@ class _MarketPageState extends State<MarketPage> {
                 ),
               ),
             );
+
+            _searchCtrl.clear(); 
+            _onSearchChanged('');
+
             if (purchased == true) {
               _fetchItems(); 
               _fetchCurrentUser();
