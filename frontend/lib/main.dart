@@ -16,7 +16,7 @@ class GenshinImportApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
       ),
-      initialRoute: AppRoutes.shell,
+      initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
@@ -19,6 +21,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  bool _isLoading = false;
+
+  final String baseUrl = '';
 
   @override
   void dispose() {
@@ -28,11 +33,47 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      // TODO
+Future<void> _submit() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  setState(() => _isLoading = true);
+
+  try {
+    final url = Uri.parse('$baseUrl/api/auth/register');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': _emailCtrl.text.trim().split('@')[0],
+        'email': _emailCtrl.text.trim(),
+        'password': _passwordCtrl.text,
+      }),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created! Please sign in.')),
+      );
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    } else {
+      final message = body['message'] ?? 'Registration failed';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Network error. Please try again.')),
+    );
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      CustomButton(label: 'Sign Up', onPressed: _submit),
+                      CustomButton(label: 'Sign Up', onPressed: _isLoading ? null : _submit),
                       const SizedBox(height: 16),
                       Center(
                         child: GestureDetector(
