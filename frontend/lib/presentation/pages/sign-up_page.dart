@@ -23,7 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordCtrl = TextEditingController();
   bool _isLoading = false;
 
-  final String baseUrl =''; // cmd ipconfig -> IPv4 Address -> http://ip:port
+  final String baseUrl = '';
 
   @override
   void dispose() {

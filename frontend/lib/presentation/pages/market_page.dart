@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:genshin_import_fe/presentation/pages/item_detail.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,8 +25,7 @@ class _MarketPageState extends State<MarketPage> {
   int _currency = 0;
   String _token = '';
 
-  final String baseUrl =
-      ''; // cmd ipconfig -> IPv4 Address -> http://ip:port
+  final String baseUrl = '';
 
   @override
   void initState() {
@@ -45,29 +45,27 @@ class _MarketPageState extends State<MarketPage> {
     await Future.wait([_fetchItems(), _fetchCurrentUser()]);
   }
 
-Future<void> _fetchCurrentUser() async {
-  if (_token.isEmpty) {
-    return;
-  }
-  try {
-    final url = Uri.parse('$baseUrl/api/users/me');
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $_token'},
-    );
+  Future<void> _fetchCurrentUser() async {
+    if (_token.isEmpty) return;
+    try {
+      final url = Uri.parse('$baseUrl/api/users/me');
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $_token'},
+      );
 
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body);
-      final String rawCurrency = body['data']['currency']?.toString() ?? '0';
-      final int currency = double.tryParse(rawCurrency)?.toInt() ?? 0;
-      setState(() => _currency = currency);
-    } else {
-      debugPrint('Failed to fetch user. Status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final String rawCurrency = body['data']['currency']?.toString() ?? '0';
+        final int currency = double.tryParse(rawCurrency)?.toInt() ?? 0;
+        setState(() => _currency = currency);
+      } else {
+        debugPrint('Failed to fetch user. Status: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching user: $e');
     }
-  } catch (e) {
-    debugPrint('Error fetching user: $e');
   }
-}
 
   Future<void> _fetchItems() async {
     setState(() => _isLoading = true);
@@ -85,9 +83,7 @@ Future<void> _fetchCurrentUser() async {
         });
       } else {
         setState(() => _isLoading = false);
-        debugPrint(
-          'Failed to fetch items. Status code: ${response.statusCode}',
-        );
+        debugPrint('Failed to fetch items. Status code: ${response.statusCode}');
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -146,9 +142,7 @@ Future<void> _fetchCurrentUser() async {
               RichText(
                 text: TextSpan(
                   text: 'Ready to buy some stuff, ',
-                  style: AppTextStyles.subtitle.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
                   children: [
                     TextSpan(
                       text: 'Traveler',
@@ -160,9 +154,7 @@ Future<void> _fetchCurrentUser() async {
                     ),
                     TextSpan(
                       text: '?',
-                      style: AppTextStyles.subtitle.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                      style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -170,9 +162,7 @@ Future<void> _fetchCurrentUser() async {
             ],
           ),
         ),
-
         const SizedBox(width: 16),
-
         PrimogemChip(balance: _currency),
       ],
     );
@@ -226,14 +216,33 @@ Future<void> _fetchCurrentUser() async {
         final String rawPrice = item['price']?.toString() ?? '0';
         final int displayPrice = double.tryParse(rawPrice)?.toInt() ?? 0;
 
+        final int itemId = (item['id'] as num?)?.toInt() ?? 0;
+
         return ItemCard(
           imageUrl: fullImageUrl,
-          title: item['name'] ?? 'Unknown Item',
+          title: item['name'] ?? 'Unknown',
           price: displayPrice,
           stock: item['stock'] ?? 0,
-          onTap: () {
-            // TODO
-            debugPrint('Ditekan: ${item['name']}');
+          onTap: () async {
+            final purchased = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ItemDetailPage(
+                  itemId: itemId,
+                  token: _token, 
+                  imageUrl: fullImageUrl,
+                  title: item['name'] ?? 'Unknown',
+                  category: item['type'] ?? 'Unknown',
+                  description: item['description'] ?? 'No description available for this item.',
+                  price: displayPrice,
+                  stock: item['stock'] ?? 0,
+                ),
+              ),
+            );
+            if (purchased == true) {
+              _fetchItems(); 
+              _fetchCurrentUser();
+            }
           },
         );
       },

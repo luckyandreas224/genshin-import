@@ -103,8 +103,6 @@ class ItemCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Image.asset('assets/images/stock.png', width: 20, height: 20),
-                          const SizedBox(width: 4),
                           Text(  
                             'Stock: $stock',
                             style: GoogleFonts.ebGaramond(

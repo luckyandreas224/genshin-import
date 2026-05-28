@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
 
-  final String baseUrl = ''; // cmd ipconfig -> IPv4 Address -> http://ip:port
+  final String baseUrl = '';
 
   @override
   void dispose() {
