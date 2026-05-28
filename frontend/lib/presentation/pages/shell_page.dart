@@ -14,11 +14,26 @@ class ShellPage extends StatefulWidget {
 class _ShellState extends State<ShellPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    MarketPage(),
-    Placeholder(),
-    ProfilePage(),
-  ];
+  final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const MarketPage(),
+      ProfilePage(key: _profileKey),
+      const Placeholder(),
+    ];
+  }
+
+  void _onTabTap(int index) {
+    if (index == 1 || index == 3) {
+      _profileKey.currentState?.refresh();
+    }
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +43,7 @@ class _ShellState extends State<ShellPage> {
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: CustomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTabTap,
       ),
     );
   }

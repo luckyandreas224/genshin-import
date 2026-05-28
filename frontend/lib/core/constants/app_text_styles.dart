@@ -8,7 +8,7 @@ class AppTextStyles {
     fontWeight: FontWeight.bold,
     color: AppColors.primaryDark,
   );
-
+  
   static TextStyle subtitle = GoogleFonts.plusJakartaSans(
     fontSize: 14,
     fontWeight: FontWeight.w500,
