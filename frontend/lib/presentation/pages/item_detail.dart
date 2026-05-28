@@ -118,7 +118,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
           ),
 
           Positioned(
-            top: 75,
+            top: 48,
             left: 24,
             child: GestureDetector(
               onTap: () => Navigator.pop(context),

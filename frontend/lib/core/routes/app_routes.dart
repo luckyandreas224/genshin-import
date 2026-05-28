@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../presentation/pages/splash_screen.dart';
-import '../../presentation/pages/sign-in_page.dart';
-import '../../presentation/pages/sign-up_page.dart';
+import '../../presentation/pages/login_page.dart';
+import '../../presentation/pages/register_page.dart';
 import '../../presentation/pages/shell_page.dart';
 
 class AppRoutes {
