@@ -1,6 +1,9 @@
 const db = require("../config/db.config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { OAuth2Client } = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -73,7 +76,7 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role, username: user.username },
+      { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -88,4 +91,44 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ success: false, message: "Token required" });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user = rows[0];
+
+    if (!user) {
+      const [result] = await db.query("INSERT INTO users (username, email) VALUES (?, ?)", [name, email]);
+      user = { id: result.insertId, username: name, email, role: "USER" };
+    }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      data: { token },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+module.exports = { register, login, googleLogin };
