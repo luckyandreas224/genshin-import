@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
@@ -25,6 +27,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final String baseUrl = '';
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '241776516082-747rcee7prq53uj551ld03cno5j5shfv.apps.googleusercontent.com',
+  );
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -32,6 +39,64 @@ class _RegisterPageState extends State<RegisterPage> {
     _confirmPasswordCtrl.dispose();
     super.dispose();
   }
+
+  Future<void> _googleSubmit() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      if (account == null) {
+      
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google Sign-In failed. Try again.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final url = Uri.parse('$baseUrl/api/auth/google');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken, 'email': account.email, 'username': account.displayName }),
+      );
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = body['data']['token'] as String;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+      } else {
+        final message = body['message'] ?? 'Google login failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
 
 Future<void> _submit() async {
   if (!_formKey.currentState!.validate()) return;
@@ -137,6 +202,14 @@ Future<void> _submit() async {
                       ),
                       const SizedBox(height: 24),
                       CustomButton(label: 'Sign Up', onPressed: _isLoading ? null : _submit),
+                      const SizedBox(height: 16),
+
+                      CustomButton(
+                        label: 'Continue with Google',
+                        isOutlined: true,
+                        iconAsset: 'assets/images/google_icon.png',
+                        onPressed: _isLoading ? null : _googleSubmit,
+                      ),
                       const SizedBox(height: 16),
                       Center(
                         child: GestureDetector(
