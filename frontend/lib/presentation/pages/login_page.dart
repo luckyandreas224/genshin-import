@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../widgets/custom_text_field.dart';
@@ -25,6 +26,11 @@ class _LoginPageState extends State<LoginPage> {
 
   final String baseUrl = '';
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '241776516082-747rcee7prq53uj551ld03cno5j5shfv.apps.googleusercontent.com',
+  );
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -32,7 +38,64 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _submit() async { 
+  Future<void> _googleSubmit() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      if (account == null) {
+      
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google Sign-In failed. Try again.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final url = Uri.parse('$baseUrl/api/auth/google');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken, 'email': account.email, 'username': account.displayName }),
+      );
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = body['data']['token'] as String;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+      } else {
+        final message = body['message'] ?? 'Google login failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -61,9 +124,9 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         final message = body['message'] ?? 'Login failed';
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (!mounted) return;
@@ -124,28 +187,25 @@ class _LoginPageState extends State<LoginPage> {
                         obscure: true,
                         validator: Validators.password,
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       CustomButton(
-                        label: 'Sign In', 
-                        onPressed: _isLoading ? null : _submit
+                        label: 'Sign In',
+                        onPressed: _isLoading ? null : _submit,
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       CustomButton(
-                        label: 'Sign In with Google',
+                        label: 'Continue with Google',
                         isOutlined: true,
                         iconAsset: 'assets/images/google_icon.png',
-                        onPressed: () {
-                          // TODO: Google Sign-In 
-                          debugPrint('Google Sign In ditekan');
-                        },
+                        onPressed: _isLoading ? null : _googleSubmit,
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       Center(
                         child: GestureDetector(
                           onTap: () =>
@@ -156,7 +216,8 @@ class _LoginPageState extends State<LoginPage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+                                fontFamily:
+                                    GoogleFonts.plusJakartaSans().fontFamily,
                                 color: AppColors.textSecondary,
                               ),
                               children: [
@@ -165,7 +226,8 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+                                    fontFamily: GoogleFonts.plusJakartaSans()
+                                        .fontFamily,
                                     color: AppColors.textPrimary,
                                   ),
                                 ),

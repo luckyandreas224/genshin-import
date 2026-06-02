@@ -24,7 +24,7 @@ class ProfilePageState extends State<ProfilePage> {
   int _totalWeapons = 0;
   int _totalArtifacts = 0;
 
-  final String baseUrl = '';
+final String baseUrl = '';
 
   @override
   void initState() {

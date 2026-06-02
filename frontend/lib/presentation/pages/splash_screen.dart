@@ -19,8 +19,6 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _init() async {
     await Future.delayed(const Duration(seconds: 1));
 
-    // Lazy Load Resource (user session, config, etc.)
-
     if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.login);
   }
 

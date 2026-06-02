@@ -25,7 +25,7 @@ class _MarketPageState extends State<MarketPage> {
   int _currency = 0;
   String _token = '';
 
-  final String baseUrl = '';
+    final String baseUrl = '';
 
   @override
   void initState() {
