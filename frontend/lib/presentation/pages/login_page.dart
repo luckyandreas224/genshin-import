@@ -124,9 +124,28 @@ class _LoginPageState extends State<LoginPage> {
                         obscure: true,
                         validator: Validators.password,
                       ),
+                      
                       const SizedBox(height: 24),
-                      CustomButton(label: 'Sign In', onPressed: _isLoading ? null : _submit),
+                      
+                      CustomButton(
+                        label: 'Sign In', 
+                        onPressed: _isLoading ? null : _submit
+                      ),
+                      
                       const SizedBox(height: 16),
+                      
+                      CustomButton(
+                        label: 'Sign In with Google',
+                        isOutlined: true,
+                        iconAsset: 'assets/images/google_icon.png',
+                        onPressed: () {
+                          // TODO: Google Sign-In 
+                          debugPrint('Google Sign In ditekan');
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
                       Center(
                         child: GestureDetector(
                           onTap: () =>
@@ -142,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: 'Sign up',
+                                  text: 'Sign Up',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
