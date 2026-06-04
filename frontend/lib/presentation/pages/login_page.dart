@@ -1,15 +1,17 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+
+import '../../core/services/oauth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,12 +26,9 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
 
-  final String baseUrl = '';
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId:
-        '241776516082-747rcee7prq53uj551ld03cno5j5shfv.apps.googleusercontent.com',
-  );
+  final OAuthService _oAuthService = OAuthService();
 
   @override
   void dispose() {
@@ -42,14 +41,14 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
-      if (account == null) {
+      final account = await _oAuthService.loginGoogle();
       
+      if (account == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final GoogleSignInAuthentication auth = await account.authentication;
+      final auth = await account.authentication;
       final String? idToken = auth.idToken;
 
       if (idToken == null) {
@@ -65,7 +64,9 @@ class _LoginPageState extends State<LoginPage> {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'idToken': idToken, 'email': account.email, 'username': account.displayName }),
+        body: jsonEncode({
+          'idToken': idToken,
+        }),
       );
 
       final body = jsonDecode(response.body);
@@ -168,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 4),
                       Center(
                         child: Text(
-                          'Sign in to access your imports',
+                          'Sign in to access',
                           style: AppTextStyles.subtitle,
                         ),
                       ),
