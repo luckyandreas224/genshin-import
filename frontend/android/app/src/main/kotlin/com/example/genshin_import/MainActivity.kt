@@ -1,4 +1,4 @@
-package com.example.genshin_import_fe
+package com.example.genshin_import
 
 import io.flutter.embedding.android.FlutterActivity
 

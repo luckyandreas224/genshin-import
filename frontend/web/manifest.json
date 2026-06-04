@@ -1,6 +1,6 @@
 {
-    "name": "genshin_import_fe",
-    "short_name": "genshin_import_fe",
+    "name": "genshin_import",
+    "short_name": "genshin_import",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
