@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,7 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordCtrl = TextEditingController();
   bool _isLoading = false;
 
-  final String baseUrl = '';
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
   @override
   void dispose() {

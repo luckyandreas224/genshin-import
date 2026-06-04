@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,8 +25,7 @@ class ProfilePageState extends State<ProfilePage> {
   int _totalWeapons = 0;
   int _totalArtifacts = 0;
 
-  final String baseUrl = '';
-
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';  
   @override
   void initState() {
     super.initState();

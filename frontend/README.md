@@ -1,4 +1,4 @@
-# genshin_import_fe
+# genshin_import
 
 A new Flutter project.
 

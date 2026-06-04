@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'package:genshin_import_fe/presentation/pages/item_detail.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import './item_detail.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,7 +27,7 @@ class _MarketPageState extends State<MarketPage> {
   int _currency = 0;
   String _token = '';
 
-  final String baseUrl = '';
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
   @override
   void initState() {

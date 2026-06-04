@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'core/routes/app_routes.dart';
 import 'core/constants/app_colors.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() => runApp(const GenshinImportApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+  runApp(const GenshinImportApp());
+}
 
 class GenshinImportApp extends StatelessWidget {
   const GenshinImportApp({super.key});
@@ -16,7 +21,7 @@ class GenshinImportApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
       ),
-      initialRoute: AppRoutes.splash,
+      initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
     );
   }

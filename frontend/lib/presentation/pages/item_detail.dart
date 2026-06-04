@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_colors.dart';
@@ -36,7 +37,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
   int _quantity = 1;
   bool _isBuying = false;
 
-  final String baseUrl = '';
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
   void _incrementQuantity() {
     if (_quantity < widget.stock) {

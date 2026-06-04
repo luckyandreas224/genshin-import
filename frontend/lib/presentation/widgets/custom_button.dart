@@ -8,6 +8,8 @@ class CustomButton extends StatelessWidget {
   
   final bool isOutlined;
   final Color? color;
+  
+  final String? iconAsset;
 
   const CustomButton({
     super.key, 
@@ -15,11 +17,31 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.isOutlined = false,
     this.color,
+    this.iconAsset,
   });
 
-  @override
+@override
   Widget build(BuildContext context) {
     final buttonColor = color ?? AppColors.primary;
+
+    Widget buttonContent = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (iconAsset != null) ...[
+          Image.asset(iconAsset!, width: 24, height: 24),
+          const SizedBox(width: 8),
+        ],
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+            color: isOutlined ? buttonColor : Colors.white,
+          ),
+        ),
+      ],
+    );
 
     return SizedBox(
       width: double.infinity,
@@ -31,17 +53,8 @@ class CustomButton extends StatelessWidget {
                 side: BorderSide(color: buttonColor, width: 1),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-                  color: buttonColor,
-                ),
-              ),
+              child: buttonContent,
             )
-
           : ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
@@ -50,15 +63,7 @@ class CustomButton extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 elevation: 0,
               ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-                  color: Colors.white,
-                ),
-              ),
+              child: buttonContent,
             ),
     );
   }
