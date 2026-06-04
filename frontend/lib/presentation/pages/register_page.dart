@@ -3,12 +3,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import '../../core/services/oauth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -25,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
 
   final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+  final OAuthService _oAuthService = OAuthService();
 
   @override
   void dispose() {
@@ -34,47 +37,106 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-Future<void> _submit() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _googleSubmit() async {
+    setState(() => _isLoading = true);
 
-  setState(() => _isLoading = true);
+    try {
+      final account = await _oAuthService.loginGoogle();
 
-  try {
-    final url = Uri.parse('$baseUrl/api/auth/register');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': _emailCtrl.text.trim().split('@')[0],
-        'email': _emailCtrl.text.trim(),
-        'password': _passwordCtrl.text,
-      }),
-    );
+      if (account == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
 
-    final body = jsonDecode(response.body);
+      final auth = await account.authentication;
+      final String? idToken = auth.idToken;
 
-    if (response.statusCode == 201) {
+      if (idToken == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google Sign-In failed. Try again.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final url = Uri.parse('$baseUrl/api/auth/google');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'idToken': idToken,
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = body['data']['token'] as String;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+      } else {
+        final message = body['message'] ?? 'Google login failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created! Please sign in.')),
+        const SnackBar(content: Text('Network error. Please try again.')),
       );
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    } else {
-      final message = body['message'] ?? 'Registration failed';
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Network error. Please try again.')),
-    );
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
   }
-}
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/register');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': _emailCtrl.text.trim().split('@')[0],
+          'email': _emailCtrl.text.trim(),
+          'password': _passwordCtrl.text,
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created! Please sign in.')),
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      } else {
+        final message = body['message'] ?? 'Registration failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,8 +199,18 @@ Future<void> _submit() async {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      CustomButton(label: 'Sign Up', onPressed: _isLoading ? null : _submit),
+                      CustomButton(
+                        label: 'Sign Up',
+                        onPressed: _isLoading ? null : _submit,
+                      ),
                       const SizedBox(height: 16),
+                      CustomButton(
+                        label: 'Continue with Google',
+                        isOutlined: true,
+                        iconAsset: 'assets/images/google_icon.png',
+                        onPressed: _isLoading ? null : _googleSubmit,
+                      ),
+                      const SizedBox(height: 24),
                       Center(
                         child: GestureDetector(
                           onTap: () => Navigator.pushReplacementNamed(
@@ -151,7 +223,8 @@ Future<void> _submit() async {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+                                fontFamily:
+                                    GoogleFonts.plusJakartaSans().fontFamily,
                                 color: AppColors.textSecondary,
                               ),
                               children: [
@@ -160,7 +233,8 @@ Future<void> _submit() async {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+                                    fontFamily: GoogleFonts.plusJakartaSans()
+                                        .fontFamily,
                                     color: AppColors.textPrimary,
                                   ),
                                 ),
