@@ -4,79 +4,79 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/stat_card.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_text_styles.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/stat_card.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class AdminProfilePage extends StatefulWidget {
+  const AdminProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => ProfilePageState();
+  State<AdminProfilePage> createState() => AdminProfilePageState();
 }
 
-class ProfilePageState extends State<ProfilePage> {
+class AdminProfilePageState extends State<AdminProfilePage> {
   bool _isLoading = false;
   String _token = '';
-
   String _username = '';
   String _email = '';
-  int _totalWeapons = 0;
-  int _totalArtifacts = 0;
+  int _totalItems = 0;
 
-  final String baseUrl = dotenv.env['BASE_URL'] ?? '';  
+  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+
   @override
   void initState() {
     super.initState();
     _init();
   }
 
-  Future<void> refresh() => _fetchCurrentUser();
+  Future<void> refresh() => _fetchData();
 
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token') ?? '';
-    await _fetchCurrentUser();
+    await _fetchData();
   }
 
-  Future<void> _fetchCurrentUser() async {
+  Future<void> _fetchData() async {
     if (_token.isEmpty) return;
-
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('$baseUrl/api/users/me');
-      final response = await http.get(
-        url,
+      final userUrl = Uri.parse('$baseUrl/api/users/me');
+      final userResponse = await http.get(
+        userUrl,
         headers: {'Authorization': 'Bearer $_token'},
       );
 
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final data = body['data'];
+      final itemsUrl = Uri.parse('$baseUrl/api/items');
+      final itemsResponse = await http.get(itemsUrl);
 
+      if (userResponse.statusCode == 200) {
+        final userBody = jsonDecode(userResponse.body);
+        final data = userBody['data'];
         setState(() {
           _username = data['username'] ?? '';
           _email = data['email'] ?? '';
-          _totalWeapons = (data['totalWeapons'] as num?)?.toInt() ?? 0;
-          _totalArtifacts = (data['totalArtifacts'] as num?)?.toInt() ?? 0;
-          _isLoading = false;
         });
-      } else {
-        setState(() => _isLoading = false);
-        debugPrint('Failed to fetch user. Status: ${response.statusCode}');
+      }
+
+      if (itemsResponse.statusCode == 200) {
+        final itemsBody = jsonDecode(itemsResponse.body);
+        final List<dynamic> items = itemsBody['data'] ?? [];
+        setState(() => _totalItems = items.length);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      debugPrint('Error fetching user: $e');
+      debugPrint('Error fetching admin profile: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _signOut() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
-
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
@@ -110,22 +110,9 @@ class ProfilePageState extends State<ProfilePage> {
 
         const SizedBox(height: 24),
 
-        Row(
-          children: [
-            Expanded(
-              child: StatCard(
-                title: 'Total Weapons',
-                value: '$_totalWeapons',
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: StatCard(
-                title: 'Total Artifacts',
-                value: '$_totalArtifacts',
-              ),
-            ),
-          ],
+        StatCard(
+          title: 'Total Items in Store',
+          value: '$_totalItems',
         ),
 
         const SizedBox(height: 24),
@@ -145,7 +132,7 @@ class ProfilePageState extends State<ProfilePage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text("Traveler's Profile", style: AppTextStyles.heading),
+        Text("Admin's Profile", style: AppTextStyles.heading),
       ],
     );
   }

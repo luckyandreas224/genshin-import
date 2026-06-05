@@ -84,7 +84,7 @@ const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: { token },
+      data: { token, role: user.role },
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Internal server error" });
@@ -124,7 +124,7 @@ const googleLogin = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: { token },
+      data: { token, role: user.role },
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Internal server error" });

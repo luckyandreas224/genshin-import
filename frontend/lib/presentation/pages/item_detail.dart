@@ -241,12 +241,9 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Image.asset('assets/images/stock.png', width: 24, height: 24),
-                                      const SizedBox(width: 8),
                                       Text(
                                         'Stock: ${widget.stock}',
                                         style: GoogleFonts.ebGaramond(
@@ -257,6 +254,8 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                                       ),
                                     ],
                                   ),
+                                  
+                                const SizedBox(height: 8),
                                 ],
                               ),
 

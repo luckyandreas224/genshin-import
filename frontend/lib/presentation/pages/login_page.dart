@@ -73,12 +73,16 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         final token = body['data']['token'] as String;
+        final String role = body['data']['role'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
 
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+        Navigator.pushReplacementNamed(
+          context,
+          role == 'admin' ? AppRoutes.adminShell : AppRoutes.shell,
+        );
       } else {
         final message = body['message'] ?? 'Google login failed';
         if (!mounted) return;
@@ -116,12 +120,16 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         final token = body['data']['token'] as String;
+        final String role = body['data']['role'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
 
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.shell);
+        Navigator.pushReplacementNamed(
+          context,
+          role == 'admin' ? AppRoutes.adminShell : AppRoutes.shell,
+        );
       } else {
         final message = body['message'] ?? 'Login failed';
         if (!mounted) return;
