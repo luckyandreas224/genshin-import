@@ -7,18 +7,28 @@ class CustomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
+  final List<String>? icons;
+  final List<String>? labels;
+
   const CustomNavigationBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.icons,
+    this.labels,
   });
 
-  static const _icons = ['assets/icons/market.svg', 'assets/icons/profile.svg'];
-
-  static const _labels = ['Market', 'Profile'];
+  static const _defaultIcons = [
+    'assets/icons/market.svg',
+    'assets/icons/profile.svg',
+  ];
+  static const _defaultLabels = ['Market', 'Profile'];
 
   @override
   Widget build(BuildContext context) {
+    final resolvedIcons = icons ?? _defaultIcons;
+    final resolvedLabels = labels ?? _defaultLabels;
+
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 34),
       child: Container(
@@ -31,17 +41,20 @@ class CustomNavigationBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(
-            _labels.length,
-            (index) => _buildNavItem(index),
+            resolvedLabels.length,
+            (index) => _buildNavItem(index, resolvedIcons, resolvedLabels),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index) {
+  Widget _buildNavItem(
+    int index,
+    List<String> resolvedIcons,
+    List<String> resolvedLabels,
+  ) {
     final isSelected = currentIndex == index;
-
     final color = isSelected ? AppColors.primaryDark : AppColors.textSecondary;
 
     return GestureDetector(
@@ -49,8 +62,7 @@ class CustomNavigationBar extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 80,
-        height:
-            70,
+        height: 70,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
@@ -59,14 +71,14 @@ class CustomNavigationBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  _icons[index],
+                  resolvedIcons[index],
                   width: 24,
                   height: 24,
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _labels[index],
+                  resolvedLabels[index],
                   style: isSelected
                       ? AppTextStyles.navLabel
                       : AppTextStyles.navLabelInactive,
@@ -75,16 +87,13 @@ class CustomNavigationBar extends StatelessWidget {
             ),
             if (isSelected)
               Positioned(
-                top:
-                    -2,
+                top: -2,
                 child: Container(
                   height: 4,
-                  width: 48, // Lebar tompel
+                  width: 48,
                   decoration: BoxDecoration(
                     color: AppColors.primaryDark,
-                    borderRadius: BorderRadius.circular(
-                      4,
-                    ),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
