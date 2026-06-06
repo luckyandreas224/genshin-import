@@ -75,11 +75,9 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
 
     return res.status(200).json({
       success: true,
@@ -116,8 +114,8 @@ const googleLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
+      { id: user.id, role: user.role }, 
+      process.env.JWT_SECRET, 
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
