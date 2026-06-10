@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988579080125",
+    "project_id": "western-trees-498204-m3",
+    "storage_bucket": "western-trees-498204-m3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988579080125:android:63ff46db238991bfea54d4",
+        "android_client_info": {
+          "package_name": "com.example.genshin_import"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQKCnuwVgiDOsXbWcL5I2o3KCe092Ccg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
