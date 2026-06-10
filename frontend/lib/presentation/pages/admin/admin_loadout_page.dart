@@ -330,7 +330,7 @@ class _AdminItemsPageState extends State<AdminItemsPage> {
 class _ItemFormSheet extends StatefulWidget {
   final String token;
   final String baseUrl;
-  final Map<String, dynamic>? item; // null = add mode
+  final Map<String, dynamic>? item;
   final VoidCallback onSuccess;
 
   const _ItemFormSheet({
@@ -489,7 +489,6 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle
               Center(
                 child: Container(
                   width: 40,
@@ -502,18 +501,15 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Title
               Text(
                 _isEdit ? 'Edit Item' : 'Add New Item',
                 style: AppTextStyles.heading,
               ),
               const SizedBox(height: 20),
 
-              // Image picker
               _buildImagePicker(),
               const SizedBox(height: 16),
 
-              // Name
               CustomTextField(
                 label: 'Item Name',
                 placeholder: 'e.g. Aquila Favonia',
@@ -523,15 +519,12 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Type dropdown
               _buildTypeDropdown(),
               const SizedBox(height: 12),
 
-              // Description
               _buildDescriptionField(),
               const SizedBox(height: 12),
 
-              // Stock & Price (side by side)
               Row(
                 children: [
                   Expanded(
@@ -565,7 +558,6 @@ class _ItemFormSheetState extends State<_ItemFormSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Submit button
               CustomButton(
                 label: _isLoading
                     ? (_isEdit ? 'Saving...' : 'Creating...')
