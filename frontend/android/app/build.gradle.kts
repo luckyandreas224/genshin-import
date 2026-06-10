@@ -30,9 +30,9 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+    
     signingConfigs {
         getByName("debug") {
-            // Point to the keystore inside the project folder
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
